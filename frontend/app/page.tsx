@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 const API_URL =
-  "https://effective-eureka-6v5pp4r7qg4v39x7-8000.app.github.dev";
+  "https://vigilant-waddle-q7j7gpwq54r29469-8000.app.github.dev";
 
 type BriefSection = {
   title: string;
