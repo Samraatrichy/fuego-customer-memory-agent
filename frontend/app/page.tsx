@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 const API_URL =
-  "https://vigilant-waddle-q7j7gpwq54r29469-8000.app.github.dev";
+  "https://fuego-customer-memory-agent.onrender.com";
 
 type BriefSection = {
   title: string;
