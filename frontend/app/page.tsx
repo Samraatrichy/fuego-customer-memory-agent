@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const API_URL =
   "https://vigilant-waddle-q7j7gpwq54r29469-8000.app.github.dev";
@@ -26,8 +26,43 @@ type Solution = {
   result: string;
 };
 
+type Customer = {
+  id: number;
+  name: string;
+};
+
 export default function Home() {
-  const [customer, setCustomer] = useState("Acme Corp");
+  const [customer, setCustomer] = useState("");
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customersLoading, setCustomersLoading] = useState(true);
+  const [customerError, setCustomerError] = useState("");
+  const [showAddCustomer, setShowAddCustomer] = useState(false);
+  const [newCustomerName, setNewCustomerName] = useState("");
+  const [addingCustomer, setAddingCustomer] = useState(false);
+
+  const [showAddMeeting, setShowAddMeeting] = useState(false);
+  const [meetingForm, setMeetingForm] = useState({
+    date: new Date().toISOString().slice(0, 10),
+    title: "",
+    participants: "",
+    summary: "",
+    decisions: "",
+    commitments: "",
+  });
+  const [addingMeeting, setAddingMeeting] = useState(false);
+
+  const [showAddTicket, setShowAddTicket] = useState(false);
+  const [ticketForm, setTicketForm] = useState({
+    ticket_id: "",
+    date: new Date().toISOString().slice(0, 10),
+    title: "",
+    priority: "Medium",
+    status: "Open",
+    issue: "",
+    solution: "",
+    outcome: "",
+  });
+  const [addingTicket, setAddingTicket] = useState(false);
 
   const [brief, setBrief] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,6 +81,236 @@ export default function Home() {
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [solutionsLoading, setSolutionsLoading] = useState(false);
   const [solutionsError, setSolutionsError] = useState("");
+
+
+  // =========================================
+  // LOAD CUSTOMERS
+  // =========================================
+
+  async function loadCustomers(selectFirst = false) {
+    setCustomersLoading(true);
+    setCustomerError("");
+
+    try {
+      const response = await fetch(`${API_URL}/customers`);
+
+      if (!response.ok) {
+        throw new Error(`Request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const list: Customer[] = data.customers ?? [];
+
+      setCustomers(list);
+
+      if (selectFirst && list.length > 0) {
+        setCustomer(list[0].name);
+      } else if (customer && !list.some((item) => item.name === customer)) {
+        setCustomer(list.length > 0 ? list[0].name : "");
+      } else if (!customer && list.length > 0) {
+        setCustomer(list[0].name);
+      }
+    } catch (err) {
+      setCustomerError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong while loading customers."
+      );
+    } finally {
+      setCustomersLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadCustomers(true);
+  }, []);
+
+  // =========================================
+  // ADD CUSTOMER
+  // =========================================
+
+  async function createCustomer() {
+    const name = newCustomerName.trim();
+
+    if (!name) {
+      return;
+    }
+
+    setAddingCustomer(true);
+    setCustomerError("");
+
+    try {
+      const response = await fetch(`${API_URL}/customers`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail ?? `Request failed: ${response.status}`);
+      }
+
+      setNewCustomerName("");
+      setShowAddCustomer(false);
+
+      await loadCustomers();
+      handleCustomerChange(name);
+    } catch (err) {
+      setCustomerError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong while adding the customer."
+      );
+    } finally {
+      setAddingCustomer(false);
+    }
+  }
+
+  // =========================================
+  // ADD MEETING
+  // =========================================
+
+  async function createMeeting() {
+    if (!customer || !meetingForm.title.trim() || !meetingForm.summary.trim()) {
+      return;
+    }
+
+    setAddingMeeting(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `${API_URL}/customers/${encodeURIComponent(customer)}/meetings`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            date: meetingForm.date,
+            title: meetingForm.title.trim(),
+            participants: meetingForm.participants
+              .split(",")
+              .map((item) => item.trim())
+              .filter(Boolean),
+            summary: meetingForm.summary.trim(),
+            decisions: meetingForm.decisions
+              .split("\n")
+              .map((item) => item.trim())
+              .filter(Boolean),
+            commitments: meetingForm.commitments
+              .split("\n")
+              .map((item) => item.trim())
+              .filter(Boolean),
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail ?? `Request failed: ${response.status}`);
+      }
+
+      setMeetingForm({
+        date: new Date().toISOString().slice(0, 10),
+        title: "",
+        participants: "",
+        summary: "",
+        decisions: "",
+        commitments: "",
+      });
+
+      setShowAddMeeting(false);
+      setBrief("");
+      setAnswer("");
+      await loadCommitments();
+      await loadSolutions();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong while adding the meeting."
+      );
+    } finally {
+      setAddingMeeting(false);
+    }
+  }
+
+  // =========================================
+  // ADD SUPPORT TICKET
+  // =========================================
+
+  async function createTicket() {
+    if (
+      !customer ||
+      !ticketForm.ticket_id.trim() ||
+      !ticketForm.title.trim() ||
+      !ticketForm.issue.trim()
+    ) {
+      return;
+    }
+
+    setAddingTicket(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `${API_URL}/customers/${encodeURIComponent(customer)}/tickets`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ticket_id: ticketForm.ticket_id.trim(),
+            date: ticketForm.date,
+            title: ticketForm.title.trim(),
+            priority: ticketForm.priority,
+            status: ticketForm.status,
+            issue: ticketForm.issue.trim(),
+            solution: ticketForm.solution.trim(),
+            outcome: ticketForm.outcome.trim(),
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail ?? `Request failed: ${response.status}`);
+      }
+
+      setTicketForm({
+        ticket_id: "",
+        date: new Date().toISOString().slice(0, 10),
+        title: "",
+        priority: "Medium",
+        status: "Open",
+        issue: "",
+        solution: "",
+        outcome: "",
+      });
+
+      setShowAddTicket(false);
+      setBrief("");
+      setAnswer("");
+      await loadCommitments();
+      await loadSolutions();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong while adding the support ticket."
+      );
+    } finally {
+      setAddingTicket(false);
+    }
+  }
 
   async function prepareMeeting() {
     setLoading(true);
@@ -265,21 +530,320 @@ export default function Home() {
               <select
                 value={customer}
                 onChange={(e) => handleCustomerChange(e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-orange-500"
+                disabled={customersLoading || customers.length === 0}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-orange-500 disabled:opacity-60"
               >
-                <option>Acme Corp</option>
+                {customers.length === 0 ? (
+                  <option value="">
+                    {customersLoading ? "Loading customers..." : "No customers yet"}
+                  </option>
+                ) : (
+                  customers.map((item) => (
+                    <option key={item.id} value={item.name}>
+                      {item.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
             <button
               onClick={prepareMeeting}
-              disabled={loading}
+              disabled={loading || !customer}
               className="rounded-xl bg-orange-500 px-8 py-3 font-semibold text-white shadow-lg shadow-orange-500/10 transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? "Preparing..." : "Prepare Meeting"}
             </button>
+
+            <button
+              onClick={() => setShowAddCustomer((value) => !value)}
+              className="rounded-xl border border-slate-700 bg-slate-950 px-5 py-3 font-semibold text-slate-200 transition hover:border-orange-500/50 hover:text-white"
+            >
+              + Add Customer
+            </button>
           </div>
+
+          {customerError && (
+            <p className="mt-3 text-sm text-red-300">{customerError}</p>
+          )}
+
+          {showAddCustomer && (
+            <div className="mt-5 rounded-xl border border-slate-800 bg-slate-950 p-5">
+              <p className="font-semibold text-slate-100">Add a customer</p>
+              <p className="mt-1 text-sm text-slate-500">
+                Customer records are stored in SQLite and their identity is remembered by Hindsight.
+              </p>
+
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                <input
+                  value={newCustomerName}
+                  onChange={(e) => setNewCustomerName(e.target.value)}
+                  placeholder="e.g. Contoso Technologies"
+                  className="flex-1 rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-orange-500"
+                />
+
+                <button
+                  onClick={createCustomer}
+                  disabled={addingCustomer || !newCustomerName.trim()}
+                  className="rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition hover:bg-orange-400 disabled:opacity-50"
+                >
+                  {addingCustomer ? "Adding..." : "Add Customer"}
+                </button>
+              </div>
+            </div>
+          )}
         </section>
+
+        {/* Data Entry */}
+        {customer && (
+          <section className="mt-6 grid gap-5 md:grid-cols-2">
+            {/* Add Meeting */}
+            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-400">
+                    Customer Record
+                  </p>
+                  <h3 className="mt-1 text-xl font-bold">Add Meeting</h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Store a new interaction and teach FUEGO about it.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowAddMeeting((value) => !value)}
+                  className="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 hover:border-orange-500/50"
+                >
+                  {showAddMeeting ? "Close" : "+ Add"}
+                </button>
+              </div>
+
+              {showAddMeeting && (
+                <div className="mt-5 space-y-3">
+                  <input
+                    type="date"
+                    value={meetingForm.date}
+                    onChange={(e) =>
+                      setMeetingForm({ ...meetingForm, date: e.target.value })
+                    }
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+                  />
+
+                  <input
+                    value={meetingForm.title}
+                    onChange={(e) =>
+                      setMeetingForm({ ...meetingForm, title: e.target.value })
+                    }
+                    placeholder="Meeting title"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white placeholder:text-slate-600"
+                  />
+
+                  <input
+                    value={meetingForm.participants}
+                    onChange={(e) =>
+                      setMeetingForm({
+                        ...meetingForm,
+                        participants: e.target.value,
+                      })
+                    }
+                    placeholder="Participants, separated by commas"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white placeholder:text-slate-600"
+                  />
+
+                  <textarea
+                    value={meetingForm.summary}
+                    onChange={(e) =>
+                      setMeetingForm({ ...meetingForm, summary: e.target.value })
+                    }
+                    placeholder="What happened in the meeting?"
+                    rows={3}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white placeholder:text-slate-600"
+                  />
+
+                  <textarea
+                    value={meetingForm.decisions}
+                    onChange={(e) =>
+                      setMeetingForm({
+                        ...meetingForm,
+                        decisions: e.target.value,
+                      })
+                    }
+                    placeholder="Decisions — one per line"
+                    rows={2}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white placeholder:text-slate-600"
+                  />
+
+                  <textarea
+                    value={meetingForm.commitments}
+                    onChange={(e) =>
+                      setMeetingForm({
+                        ...meetingForm,
+                        commitments: e.target.value,
+                      })
+                    }
+                    placeholder="Commitments — one per line"
+                    rows={2}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white placeholder:text-slate-600"
+                  />
+
+                  <button
+                    onClick={createMeeting}
+                    disabled={
+                      addingMeeting ||
+                      !meetingForm.title.trim() ||
+                      !meetingForm.summary.trim()
+                    }
+                    className="w-full rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white hover:bg-orange-400 disabled:opacity-50"
+                  >
+                    {addingMeeting ? "Saving..." : "Save Meeting"}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Add Support Ticket */}
+            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-green-400">
+                    Customer Record
+                  </p>
+                  <h3 className="mt-1 text-xl font-bold">Add Support Ticket</h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Record issues, solutions and outcomes for future recall.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowAddTicket((value) => !value)}
+                  className="rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-300 hover:border-green-500/50"
+                >
+                  {showAddTicket ? "Close" : "+ Add"}
+                </button>
+              </div>
+
+              {showAddTicket && (
+                <div className="mt-5 space-y-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <input
+                      value={ticketForm.ticket_id}
+                      onChange={(e) =>
+                        setTicketForm({
+                          ...ticketForm,
+                          ticket_id: e.target.value,
+                        })
+                      }
+                      placeholder="Ticket ID, e.g. CON-101"
+                      className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white placeholder:text-slate-600"
+                    />
+
+                    <input
+                      type="date"
+                      value={ticketForm.date}
+                      onChange={(e) =>
+                        setTicketForm({ ...ticketForm, date: e.target.value })
+                      }
+                      className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+                    />
+                  </div>
+
+                  <input
+                    value={ticketForm.title}
+                    onChange={(e) =>
+                      setTicketForm({ ...ticketForm, title: e.target.value })
+                    }
+                    placeholder="Ticket title"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white placeholder:text-slate-600"
+                  />
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <select
+                      value={ticketForm.priority}
+                      onChange={(e) =>
+                        setTicketForm({
+                          ...ticketForm,
+                          priority: e.target.value,
+                        })
+                      }
+                      className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+                    >
+                      <option>Low</option>
+                      <option>Medium</option>
+                      <option>High</option>
+                      <option>Critical</option>
+                    </select>
+
+                    <select
+                      value={ticketForm.status}
+                      onChange={(e) =>
+                        setTicketForm({
+                          ...ticketForm,
+                          status: e.target.value,
+                        })
+                      }
+                      className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white"
+                    >
+                      <option>Open</option>
+                      <option>In Progress</option>
+                      <option>Resolved</option>
+                      <option>Closed</option>
+                    </select>
+                  </div>
+
+                  <textarea
+                    value={ticketForm.issue}
+                    onChange={(e) =>
+                      setTicketForm({ ...ticketForm, issue: e.target.value })
+                    }
+                    placeholder="Describe the customer issue"
+                    rows={3}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white placeholder:text-slate-600"
+                  />
+
+                  <textarea
+                    value={ticketForm.solution}
+                    onChange={(e) =>
+                      setTicketForm({
+                        ...ticketForm,
+                        solution: e.target.value,
+                      })
+                    }
+                    placeholder="Solution attempted"
+                    rows={2}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white placeholder:text-slate-600"
+                  />
+
+                  <textarea
+                    value={ticketForm.outcome}
+                    onChange={(e) =>
+                      setTicketForm({
+                        ...ticketForm,
+                        outcome: e.target.value,
+                      })
+                    }
+                    placeholder="Outcome, e.g. Worked / Partially worked / Not confirmed"
+                    rows={2}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white placeholder:text-slate-600"
+                  />
+
+                  <button
+                    onClick={createTicket}
+                    disabled={
+                      addingTicket ||
+                      !ticketForm.ticket_id.trim() ||
+                      !ticketForm.title.trim() ||
+                      !ticketForm.issue.trim()
+                    }
+                    className="w-full rounded-xl bg-green-500 px-5 py-3 font-semibold text-slate-950 hover:bg-green-400 disabled:opacity-50"
+                  >
+                    {addingTicket ? "Saving..." : "Save Support Ticket"}
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
 
 
         {/* Loading */}
@@ -984,10 +1548,10 @@ function AskFuego({
   onKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
 }) {
   const suggestedQuestions = [
-    "What solutions worked for Acme?",
+    `What solutions worked for ${customer}?`,
     "What solutions partially worked?",
     "What issues are still open?",
-    "What did we promise Acme?",
+    `What did we promise ${customer}?`,
   ];
 
   return (
@@ -1212,23 +1776,20 @@ function MemoryInsights({
   const lower = brief.toLowerCase();
 
   const hasWorked =
-    lower.includes("acm-102") ||
-    lower.includes("batch-based") ||
-    lower.includes("worked");
+    lower.includes("solutions that worked") &&
+    !lower.includes("none documented");
 
   const hasPartial =
-    lower.includes("acm-101") ||
     lower.includes("partially worked") ||
+    lower.includes("partially resolved") ||
     lower.includes("partial");
 
   const hasOpen =
-    lower.includes("acm-104") ||
-    lower.includes("open support") ||
-    lower.includes("monitoring");
+    lower.includes("open support issues") &&
+    !lower.includes("none recorded");
 
   return (
     <section className="mb-6">
-
       <div className="mb-4">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-400">
           Hindsight Memory
@@ -1243,15 +1804,10 @@ function MemoryInsights({
         </p>
       </div>
 
-
       <div className="grid gap-4 md:grid-cols-3">
-
-        {/* Worked */}
         {hasWorked && (
           <div className="rounded-2xl border border-green-500/20 bg-green-500/5 p-5">
-
             <div className="mb-4 flex items-center gap-3">
-
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-500/10 text-green-400">
                 ✓
               </div>
@@ -1262,26 +1818,21 @@ function MemoryInsights({
                 </p>
 
                 <h4 className="font-semibold">
-                  Batch synchronization
+                  Successful solution found
                 </h4>
               </div>
-
             </div>
 
             <p className="text-sm leading-6 text-slate-400">
-              Batch-based processing improved synchronization reliability.
+              FUEGO found a documented solution with a successful outcome in
+              this customer&apos;s history.
             </p>
-
           </div>
         )}
 
-
-        {/* Partially Worked */}
         {hasPartial && (
           <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-5">
-
             <div className="mb-4 flex items-center gap-3">
-
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-yellow-500/10 text-yellow-400">
                 !
               </div>
@@ -1292,27 +1843,21 @@ function MemoryInsights({
                 </p>
 
                 <h4 className="font-semibold">
-                  Timeout adjustment
+                  Previous approach had limits
                 </h4>
               </div>
-
             </div>
 
             <p className="text-sm leading-6 text-slate-400">
-              Increasing timeout and retry settings reduced failures but did
-              not eliminate them during larger loads.
+              FUEGO found a documented partial outcome and will keep that
+              context in mind for future interactions.
             </p>
-
           </div>
         )}
 
-
-        {/* Open Issue */}
         {hasOpen && (
           <div className="rounded-2xl border border-orange-500/20 bg-orange-500/5 p-5">
-
             <div className="mb-4 flex items-center gap-3">
-
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-500/10 text-orange-400">
                 !
               </div>
@@ -1323,20 +1868,17 @@ function MemoryInsights({
                 </p>
 
                 <h4 className="font-semibold">
-                  Monitoring request
+                  Customer follow-up required
                 </h4>
               </div>
-
             </div>
 
             <p className="text-sm leading-6 text-slate-400">
-              Acme requested monitoring and alerts for SAP synchronization
-              failures.
+              FUEGO found an explicitly open support issue in the customer
+              records.
             </p>
-
           </div>
         )}
-
       </div>
     </section>
   );
