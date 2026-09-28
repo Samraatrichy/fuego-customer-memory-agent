@@ -1,0 +1,46 @@
+[
+  {
+    "customer": "Acme Corp",
+    "ticket_id": "ACM-101",
+    "date": "2026-08-08",
+    "title": "SAP connection timeout",
+    "priority": "High",
+    "status": "Resolved",
+    "issue": "SAP integration was failing with connection timeout errors.",
+    "solution": "Increased connection timeout and adjusted retry configuration.",
+    "outcome": "Partially worked. Timeouts were reduced but the issue returned during larger data loads."
+  },
+  {
+    "customer": "Acme Corp",
+    "ticket_id": "ACM-102",
+    "date": "2026-08-14",
+    "title": "Data synchronization failure",
+    "priority": "High",
+    "status": "Resolved",
+    "issue": "Records were not consistently synchronizing from SAP to the data platform.",
+    "solution": "Changed the synchronization process to use batch-based processing.",
+    "outcome": "Worked. Synchronization became more reliable."
+  },
+  {
+    "customer": "Acme Corp",
+    "ticket_id": "ACM-103",
+    "date": "2026-08-21",
+    "title": "Dashboard refresh delay",
+    "priority": "Medium",
+    "status": "Resolved",
+    "issue": "Acme reported that dashboards were taking too long to refresh.",
+    "solution": "Optimized the data pipeline and reduced unnecessary processing during refresh.",
+    "outcome": "Worked. Dashboard refresh time improved."
+  },
+  {
+    "customer": "Acme Corp",
+    "ticket_id": "ACM-104",
+    "date": "2026-08-28",
+    "title": "Customer monitoring request",
+    "priority": "Medium",
+    "status": "Open",
+    "issue": "Acme requested monitoring and alerts for SAP synchronization failures.",
+    "solution": "Monitoring approach is being evaluated.",
+    "outcome": "Pending technical review."
+  }
+]

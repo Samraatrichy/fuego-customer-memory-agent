@@ -1,0 +1,57 @@
+[
+  {
+    "customer": "Acme Corp",
+    "date": "2026-08-05",
+    "title": "SAP Integration Discussion",
+    "participants": ["Acme IT Team", "FUEGO Technical Team"],
+    "summary": "Acme Corp discussed integrating its SAP environment with the FUEGO data platform. The customer emphasized reliable data synchronization and asked for technical documentation.",
+    "decisions": [
+      "Proceed with SAP integration assessment",
+      "FUEGO team will share integration documentation"
+    ],
+    "commitments": [
+      "Send SAP integration documentation to Acme Corp"
+    ]
+  },
+  {
+    "customer": "Acme Corp",
+    "date": "2026-08-12",
+    "title": "SAP Integration Failure Review",
+    "participants": ["Acme IT Team", "FUEGO Technical Team"],
+    "summary": "The initial SAP integration experienced connection timeouts. The team investigated network configuration and connection retry settings.",
+    "decisions": [
+      "Investigate SAP connection timeout issue"
+    ],
+    "commitments": [
+      "Investigate the synchronization failure"
+    ]
+  },
+  {
+    "customer": "Acme Corp",
+    "date": "2026-08-19",
+    "title": "Integration Performance Review",
+    "participants": ["Acme IT Team", "FUEGO Technical Team"],
+    "summary": "Acme reported slow synchronization and occasional dashboard delays. The team discussed batching records and optimizing the data pipeline.",
+    "decisions": [
+      "Test batch-based synchronization",
+      "Review dashboard refresh performance"
+    ],
+    "commitments": [
+      "Share performance test results"
+    ]
+  },
+  {
+    "customer": "Acme Corp",
+    "date": "2026-08-26",
+    "title": "Technical Follow-up",
+    "participants": ["Acme IT Team", "FUEGO Technical Team"],
+    "summary": "The customer confirmed that the revised synchronization approach improved performance. Acme requested monitoring capabilities and a technical review meeting.",
+    "decisions": [
+      "Continue with the revised synchronization approach",
+      "Explore monitoring options"
+    ],
+    "commitments": [
+      "Schedule technical review meeting"
+    ]
+  }
+]
