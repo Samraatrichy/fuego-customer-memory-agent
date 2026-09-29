@@ -83,3 +83,22 @@ Meeting Prep / Commitments /
 Solution Memory / Ask FUEGO
         ↓
    Next.js Frontend
+
+
+## 🎯 Objective
+
+The goal of FUEGO is to demonstrate how persistent memory can make customer-facing AI agents more useful across multiple interactions by remembering relevant history instead of treating every interaction as a fresh conversation.
+
+## 🔗 Links
+
+### Live Demo
+
+https://fuego-customer-memory-agent-1.onrender.com/
+
+### GitHub
+
+https://github.com/Samraatrichy/fuego-customer-memory-agent
+
+### Hindsight
+
+https://github.com/vectorize-io/hindsight
