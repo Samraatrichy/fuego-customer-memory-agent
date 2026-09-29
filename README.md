@@ -1,33 +1,85 @@
-# fuego-customer-memory-agent
-AI Customer Relationship Memory Agent powered by Hindsight
-## Project Overview
+# FUEGO — AI Customer Memory Agent
 
-FUEGO is an AI-powered customer memory agent designed to help businesses maintain long-term customer relationships. It uses persistent memory to remember important details from previous interactions, understand customer preferences, and provide context-aware responses.
+AI Customer Relationship Memory Agent powered by Hindsight.
 
-## Key Features
+## 🚀 Live Demo
 
-- **Persistent Memory:** Retains important information from previous customer interactions.
-- **Customer Relationship Tracking:** Maintains context across multiple meetings and conversations.
-- **Context-Aware Responses:** Uses previously stored information to generate more relevant responses.
-- **Multi-Customer Support:** Manages information and conversation histories for multiple customers.
-- **Intelligent Recall:** Retrieves relevant information from past interactions when needed.
+https://fuego-customer-memory-agent-1.onrender.com/
 
-## Tech Stack
+## 📌 Project Overview
 
-- **Frontend:** Next.js, React, Tailwind CSS
+FUEGO is an AI Customer Relationship Memory Agent designed to help teams maintain long-term customer context across meetings, support issues, commitments, and previous solutions.
+
+Instead of starting every customer interaction with limited context, FUEGO uses **Hindsight** as a persistent memory layer to retain and recall relevant customer history and prepare teams for their next interaction.
+
+## ✨ Key Features
+
+- **Customer Memory** — Remembers important customer interactions and history.
+- **Meeting Preparation** — Prepares a context-rich brief before the next customer meeting.
+- **Commitment Tracker** — Tracks promises, follow-ups, and commitments that still need confirmation.
+- **Solution Memory** — Remembers previous solutions and identifies solutions that worked, partially worked, or were not confirmed.
+- **Ask FUEGO** — Ask questions about a customer's previous interactions and retrieve relevant context.
+- **Multi-Customer Support** — Maintains separate customer histories for multiple customers.
+- **Hindsight Memory** — Uses persistent memory to recall relevant information across interactions.
+
+## 🧠 How It Works
+
+1. Customer meetings and support interactions are stored.
+2. Important interaction details are retained in Hindsight.
+3. When the customer returns, FUEGO recalls relevant historical context.
+4. The system combines customer records with retrieved memory.
+5. Groq generates a meeting brief and relevant talking points.
+6. Previous commitments and solutions are surfaced so teams can avoid repeating mistakes.
+
+## 🔄 Before vs After
+
+### Before FUEGO
+
+- Customer context is scattered across previous interactions.
+- Teams may forget commitments and follow-ups.
+- Previous solutions are difficult to recall.
+- Each meeting can start with limited context.
+
+### With FUEGO
+
+- Relevant customer history is recalled automatically.
+- Previous commitments are surfaced.
+- Successful and unsuccessful solutions are remembered.
+- Teams can prepare for the next customer interaction with historical context.
+
+## 🛠️ Tech Stack
+
+- **Frontend:** Next.js, React, TypeScript, Tailwind CSS
 - **Backend:** Python, FastAPI
-- **AI Model:** Groq
-- **Memory System:** Hindsight
-- **Deployment:** Vercel (Frontend), Render (Backend)
+- **AI/LLM:** Groq
+- **Memory:** Hindsight
+- **Database:** SQLite
+- **Deployment:** Render
+- **Development:** GitHub Codespaces
 
-## How It Works
+## 🏗️ Architecture
 
-1. Customer interactions are provided to the AI agent.
-2. The agent processes the information and stores relevant memories.
-3. When a customer returns, the agent retrieves relevant information from previous interactions.
-4. The retrieved context helps the agent generate personalized responses.
-5. The memory is continuously updated as new interactions occur.
-
-## Objective
-
-To build an AI agent that goes beyond simple conversational responses by maintaining persistent memory and using past interactions to improve customer experiences.
+```text
+Customer Interactions
+        ↓
+   FastAPI Backend
+        ↓
+ ┌───────────────┐
+ │    SQLite     │
+ │ Source Data   │
+ └───────────────┘
+        +
+ ┌───────────────┐
+ │   Hindsight   │
+ │ Persistent    │
+ │    Memory     │
+ └───────────────┘
+        ↓
+   Memory Recall
+        ↓
+      Groq
+        ↓
+Meeting Prep / Commitments /
+Solution Memory / Ask FUEGO
+        ↓
+   Next.js Frontend
